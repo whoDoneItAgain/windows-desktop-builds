@@ -10,8 +10,8 @@ version = {attr = "wdb.version.__version__"}
 readme = {file = ["README.md"], content-type = "text/markdown"}
 
 [project]
-name = "aws-monthly-costs"
-description = "Retrieves Windows Desktop Versions"
+name = "windows-desktop-builds"
+description = "Retrieves Windows Desktop Builds"
 requires-python = ">=3.12"
 authors = [
   {email = "12127434+whoDoneItAgain@users.noreply.github.com"},
@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [project.scripts]
-amc = "wdb.__main__:main"
+wdb = "wdb.__main__:main"
 
 
 

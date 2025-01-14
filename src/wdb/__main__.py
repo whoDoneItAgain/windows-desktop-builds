@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 
 LOGGER = logging.getLogger("wdb")
-DEFAULT_OUTPUT_FILE = "c:\\temp\\windows-desktop-builds.csv"
+DEFAULT_OUTPUT_FILE = "./outputs/windows-desktop-builds.csv"
 
 
 def get_win_build_info(os_version, url):
@@ -58,8 +58,9 @@ def get_win_build_info(os_version, url):
     return release_list
 
 
-def export_data(all_builds):
-    export_file = Path("c:\\temp\\win-versions.csv")
+def export_data(output_file, all_builds):
+    export_file = Path(output_file).absolute()
+
     (export_file.parent).mkdir(parents=True, exist_ok=True)
 
     with open(export_file, "w", newline="") as ef:
@@ -146,7 +147,13 @@ def main():
     for build in all_builds:
         LOGGER.info(build)
 
-    export_data(all_builds)
+    output_file = (
+        DEFAULT_OUTPUT_FILE
+        if DEFAULT_OUTPUT_FILE == config_args.output_file
+        else config_args.output_file
+    )
+
+    export_data(output_file, all_builds)
 
 
 if __name__ == "__main__":
