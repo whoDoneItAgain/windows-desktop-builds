@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "wdb.version.__version__"}
+readme = {file = ["README.md"], content-type = "text/markdown"}
+
+[project]
+name = "aws-monthly-costs"
+description = "Retrieves Windows Desktop Versions"
+requires-python = ">=3.12"
+authors = [
+  {email = "12127434+whoDoneItAgain@users.noreply.github.com"},
+  {name = "whoDoneItAgain"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+
+dynamic = [
+    "version",
+    "readme"
+]
+
+dependencies = [
+    "boto3",
+    "pyyaml"
+]
+
+[project.scripts]
+amc = "wdb.__main__:main"
+
+
+
+[project.urls]
+Homepage = "https://github.com/whodoneitagain/windows-desktop-builds"
