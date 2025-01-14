@@ -81,7 +81,6 @@ def get_config_args():
         action="store",
         type=str,
         default=DEFAULT_OUTPUT_FILE,
-        nargs="*",
         help="Where to output the file",
     )
     parser.add_argument(
