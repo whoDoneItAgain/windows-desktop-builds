@@ -72,7 +72,7 @@ def export_data(output_file, output_data):
     csv_categories: list = []
     for os in output_data.keys():
         for release in output_data[os].keys():
-            csv_header = ["Month", "Operating System", "Release"]
+            csv_header = ["Operating System", "Release"]
             for category in output_data[os][release].keys():
                 csv_categories.append(category)
             break
