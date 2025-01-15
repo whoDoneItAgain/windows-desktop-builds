@@ -1,0 +1,6 @@
+current-build-count: 3
+aging-build-count: 2
+
+os-checks:
+  'Windows 10': 'https://learn.microsoft.com/en-us/windows/release-health/release-information'
+  'Windows 11': 'https://learn.microsoft.com/en-us/windows/release-health/windows11-release-information'

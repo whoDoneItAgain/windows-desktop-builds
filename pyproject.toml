@@ -32,14 +32,17 @@ dynamic = [
 ]
 
 dependencies = [
-    "boto3",
-    "pyyaml"
+    "beautifulsoup4==4.12.3",
+    "packaging==24.2",
+    "pyyaml==6.0.2",
+    "requests==2.32.3",
 ]
 
 [project.scripts]
 wdb = "wdb.__main__:main"
 
-
+[tool.setuptools.package-data]
+amc = ["data/**/*.yaml"]
 
 [project.urls]
 Homepage = "https://github.com/whodoneitagain/windows-desktop-builds"
