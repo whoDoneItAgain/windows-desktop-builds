@@ -1,7 +1,6 @@
 import argparse
 import csv
 import itertools
-import json
 import logging
 import re
 import sys
@@ -278,13 +277,6 @@ def recursive_merge(dict1, dict2):
 
 
 def map_allowed_deployed(deployed_os_builds, build_allowed_builds, build_os_mappings):
-    with open("./outputs/deployed_os_builds.json", "w") as f:
-        f.write(json.dumps(deployed_os_builds, indent=2))
-    with open("./outputs/build_allowed_builds.json", "w") as f:
-        f.write(json.dumps(build_allowed_builds, indent=2))
-    with open("./outputs/build_os_mappings.json", "w") as f:
-        f.write(json.dumps(build_os_mappings, indent=2))
-
     release_build_frame: dict = {"current": 0, "aging": 0, "disallowed": 0}
     build_map: dict = {}
 
