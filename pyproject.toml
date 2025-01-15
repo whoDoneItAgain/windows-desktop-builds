@@ -42,7 +42,7 @@ dependencies = [
 wdb = "wdb.__main__:main"
 
 [tool.setuptools.package-data]
-amc = ["data/**/*.yaml"]
+wdb = ["data/**/*.yaml"]
 
 [project.urls]
 Homepage = "https://github.com/whodoneitagain/windows-desktop-builds"
