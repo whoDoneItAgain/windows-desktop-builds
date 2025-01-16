@@ -2,10 +2,12 @@ import argparse
 import csv
 import itertools
 import logging
+import os
 import re
 import sys
 from copy import deepcopy
 from pathlib import Path
+from shutil import copy2, move
 
 import requests
 import yaml
@@ -13,7 +15,7 @@ from bs4 import BeautifulSoup
 from packaging.version import Version
 
 LOGGER = logging.getLogger("wdb")
-DEFAULT_OUTPUT_FILE = "./outputs/desktop-build-statistics.csv"
+
 DEFAULT_SYNCRO_FILE = "./inputs/syncro-data.csv"
 DEFAULT_CONFIG_LOCATION = Path(__file__).parent.joinpath("data/config/config.yaml")
 
@@ -64,29 +66,47 @@ def get_win_build_info(os_version, url):
     return release_list
 
 
-def export_data(output_file, output_data):
-    export_file = Path(output_file).absolute()
+def export_data(output_path, output_data):
+    output_path = Path(output_path).expanduser()
 
-    (export_file.parent).mkdir(parents=True, exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    spreadsheet = output_path / "desktop-build-statistics.xlsx"
+    one_month_file = output_path / "one-month-statistics.csv"
+    two_month_file = output_path / "two-month-statistics.csv"
+    three_month_file = output_path / "three-month-statistics.csv"
+
+    if not spreadsheet.is_file():
+        spreadsheet_source = Path(__file__).parent.joinpath(
+            "data/desktop-build-statistics.xlsx"
+        )
+        copy2(spreadsheet_source, output_path)
+
+    if three_month_file.is_file():
+        os.remove(three_month_file)
+    if two_month_file.is_file():
+        move(two_month_file, three_month_file)
+    if one_month_file.is_file():
+        move(one_month_file, two_month_file)
 
     csv_categories: list = []
-    for os in output_data.keys():
-        for release in output_data[os].keys():
+    for os_name in output_data.keys():
+        for release in output_data[os_name].keys():
             csv_header = ["Operating System", "Release"]
-            for category in output_data[os][release].keys():
+            for category in output_data[os_name][release].keys():
                 csv_categories.append(category)
             break
         break
     csv_header.extend(csv_categories)
 
-    with open(output_file, "w", newline="") as f:
+    with open(one_month_file, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(csv_header)
-        for os in output_data.keys():
-            for release in output_data[os].keys():
-                csv_entry: list = [os, release]
+        for os_name in output_data.keys():
+            for release in output_data[os_name].keys():
+                csv_entry: list = [os_name, release]
                 for category in csv_categories:
-                    csv_entry.append(output_data[os][release][category])
+                    csv_entry.append(output_data[os_name][release][category])
                 writer.writerow(csv_entry)
 
 
@@ -94,11 +114,11 @@ def get_config_args():
     # Define the parser
     parser = argparse.ArgumentParser(description="Microsoft Windows Desktop Builds")
     parser.add_argument(
-        "--output-file",
+        "--output-path",
         action="store",
         type=str,
-        default=DEFAULT_OUTPUT_FILE,
-        help="Where to output the file",
+        default=Path("/") / "wdb",
+        help="Where to put output files",
     )
     parser.add_argument(
         "--syncro-input-file",
@@ -155,8 +175,8 @@ def windows_builds(config_settings):
 
     os_checks = config_settings["os-checks"]
 
-    for os in os_checks:
-        os_builds = get_win_build_info(os, os_checks[os])
+    for os_name in os_checks:
+        os_builds = get_win_build_info(os_name, os_checks[os_name])
 
         all_builds.extend(os_builds)
 
@@ -246,10 +266,10 @@ def map_allowed_builds(
 
     aging_build_sum = aging_build_count + current_build_count
 
-    for os in os_build_map.keys():
-        for feature in os_build_map[os].keys():
+    for os_name in os_build_map.keys():
+        for feature in os_build_map[os_name].keys():
             i = 0
-            for build in os_build_map[os][feature]:
+            for build in os_build_map[os_name][feature]:
                 if i < current_build_count:
                     current_builds.append(build)
                 elif i < aging_build_sum:
@@ -281,28 +301,28 @@ def map_allowed_deployed(deployed_os_builds, build_allowed_builds, build_os_mapp
     build_map: dict = {}
 
     # Build Deployment Counts Frame
-    for os in build_os_mappings.keys():
-        for release in build_os_mappings[os]:
-            for build in build_os_mappings[os][release]:
+    for os_name in build_os_mappings.keys():
+        for release in build_os_mappings[os_name]:
+            for build in build_os_mappings[os_name][release]:
                 if build in deployed_os_builds:
                     os_build_frame: dict = {
-                        os: {release: deepcopy(release_build_frame)}
+                        os_name: {release: deepcopy(release_build_frame)}
                     }
 
                     build_map = recursive_merge(build_map, os_build_frame)
 
-    for os in build_os_mappings.keys():
-        for release in build_os_mappings[os]:
-            for build in build_os_mappings[os][release]:
+    for os_name in build_os_mappings.keys():
+        for release in build_os_mappings[os_name]:
+            for build in build_os_mappings[os_name][release]:
                 if build in deployed_os_builds:
                     for classification in build_allowed_builds.keys():
                         if build in build_allowed_builds[classification]:
                             new_count = (
-                                build_map[os][release][classification]
+                                build_map[os_name][release][classification]
                                 + deployed_os_builds[build]
                             )
 
-                            build_map[os][release][classification] = new_count
+                            build_map[os_name][release][classification] = new_count
 
     return build_map
 
@@ -326,11 +346,7 @@ def main():
         else str(config_args.syncro_input_file)
     )
 
-    output_file = (
-        DEFAULT_OUTPUT_FILE
-        if DEFAULT_OUTPUT_FILE == config_args.output_file
-        else config_args.output_file
-    )
+    output_path = config_args.output_path
 
     all_builds: list = windows_builds(config_settings)
 
@@ -350,7 +366,7 @@ def main():
         deployed_os_builds, build_allowed_builds, build_os_mappings
     )
 
-    export_data(output_file, build_allowed_deployed_os_builds)
+    export_data(output_path, build_allowed_deployed_os_builds)
 
 
 if __name__ == "__main__":
