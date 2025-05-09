@@ -1,14 +1,15 @@
 import argparse
 import csv
+import datetime
 import itertools
 import logging
-import os
 import re
 import sys
 from copy import deepcopy
 from pathlib import Path
 from shutil import copy2, move
 
+import pandas as pd
 import requests
 import yaml
 from bs4 import BeautifulSoup
@@ -86,7 +87,12 @@ def export_data(output_path, output_data):
         copy2(spreadsheet_source, output_path)
 
     if three_month_file.is_file():
-        os.remove(three_month_file)
+        today = datetime.date.today()
+        four_months_ago = today - pd.offsets.DateOffset(months=4)
+        file_name = (
+            output_path / f"windows-desktop-builds-{four_months_ago.strftime('%Y-%m')}"
+        )
+        move(three_month_file, file_name)
     if two_month_file.is_file():
         move(two_month_file, three_month_file)
     if one_month_file.is_file():
