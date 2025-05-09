@@ -34,10 +34,11 @@ def get_win_build_info(os_version, url):
 
     # Scrape the release data and match them with their corresponding release names
     i = 0
+
     release_list = []
     tables = soup.find_all("table", class_="cells-centered")
 
-    for table in tables:
+    for table in tables[1:-2]:
         if table.find_all(string="Long-Term Servicing Channel (LTSC)"):
             continue
 
@@ -78,7 +79,7 @@ def export_data(output_path, output_data):
 
     if not spreadsheet.is_file():
         spreadsheet_source = Path(__file__).parent.joinpath(
-            "data/desktop-build-statistics.xlsx"
+            "data/desktop-build-statistics.xlsx",
         )
         copy2(spreadsheet_source, output_path)
 
@@ -160,7 +161,7 @@ def configure_logging(debug_logging: bool = False, info_logging: bool = False):
     else:
         LOGGER.setLevel(logging.NOTSET)
     log_formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
     ch.setFormatter(log_formatter)
 
@@ -188,7 +189,7 @@ def windows_builds(config_settings):
 
 def syncro_report(import_file_path):
     import_file = Path(import_file_path).absolute()
-    with open(import_file, "r") as file:
+    with open(import_file) as file:
         csv_reader = csv.reader(file)
 
         syncro_data: list = []
@@ -200,7 +201,7 @@ def syncro_report(import_file_path):
                 syncro_data_header = row
                 continue
 
-            syncro_data_entry = dict(zip(syncro_data_header, row))
+            syncro_data_entry = dict(zip(syncro_data_header, row, strict=False))
 
             syncro_data.append(syncro_data_entry)
     for sd in syncro_data:
@@ -245,7 +246,7 @@ def map_builds_to_os(ms_build_data):
             ]
             build_entry: list = [d["build_number"]]
             build_entry.extend(existing_build_entry)
-            build_entry = list(sorted(build_entry, reverse=True, key=Version))
+            build_entry = sorted(build_entry, reverse=True, key=Version)
             feature_entry: dict = {d["feature_release_version"]: build_entry}
             build_map[d["os_major_version"]][d["feature_release_version"]] = build_entry
 
@@ -306,7 +307,7 @@ def map_allowed_deployed(deployed_os_builds, build_allowed_builds, build_os_mapp
             for build in build_os_mappings[os_name][release]:
                 if build in deployed_os_builds:
                     os_build_frame: dict = {
-                        os_name: {release: deepcopy(release_build_frame)}
+                        os_name: {release: deepcopy(release_build_frame)},
                     }
 
                     build_map = recursive_merge(build_map, os_build_frame)
@@ -333,16 +334,17 @@ def main():
     config_args = get_config_args()
 
     configure_logging(
-        debug_logging=config_args.debug_logging, info_logging=config_args.info_logging
+        debug_logging=config_args.debug_logging,
+        info_logging=config_args.info_logging,
     )
 
     config_file = Path(config_args.config_file).absolute()
-    with open(config_file, "r") as cf:
+    with open(config_file) as cf:
         config_settings: dict = yaml.safe_load(cf)
 
     syncro_data_file = (
         DEFAULT_SYNCRO_FILE
-        if DEFAULT_SYNCRO_FILE == config_args.syncro_input_file
+        if config_args.syncro_input_file == DEFAULT_SYNCRO_FILE
         else str(config_args.syncro_input_file)
     )
 
@@ -363,7 +365,9 @@ def main():
     )
 
     build_allowed_deployed_os_builds = map_allowed_deployed(
-        deployed_os_builds, build_allowed_builds, build_os_mappings
+        deployed_os_builds,
+        build_allowed_builds,
+        build_os_mappings,
     )
 
     export_data(output_path, build_allowed_deployed_os_builds)
