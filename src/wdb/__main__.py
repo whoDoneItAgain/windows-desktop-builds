@@ -38,8 +38,10 @@ def get_win_build_info(os_version, url):
     release_list = []
     tables = soup.find_all("table", class_="cells-centered")
 
-    for table in tables[1:-2]:
+    for table in tables:
         if table.find_all(string="Long-Term Servicing Channel (LTSC)"):
+            continue
+        elif table.find_all(string="Hotpatch"):
             continue
 
         rows = table.find_all("tr")
