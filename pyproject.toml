@@ -32,7 +32,7 @@ dynamic = [
 ]
 
 dependencies = [
-    "beautifulsoup4==4.13.4",
+    "beautifulsoup4==4.13.5",
     "packaging==25.0",
     "pandas==2.2.3",
     "pyyaml==6.0.2",
